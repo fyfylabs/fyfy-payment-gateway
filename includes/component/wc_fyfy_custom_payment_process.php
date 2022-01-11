@@ -43,7 +43,7 @@ $sol_logo = "data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjUwIiB2a
 
         <div class="content__pair--content">
             <div class="content__pair--half">
-                <button class="pay_broswer_button phan">
+                <button class="btn btn-primary pay_broswer_button phan">
                     <i class="wc-wallet-button-icon">
                         <img src="<?php echo esc_attr($phan_logo) ?>">
                     </i>
@@ -51,7 +51,7 @@ $sol_logo = "data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjUwIiB2a
                 </button>
             </div>
             <div class="content__pair--half">
-                <button class="pay_broswer_button sol">
+                <button class="btn btn-primary pay_broswer_button sol">
                     <i class="wc-wallet-button-icon">
                         <img src="<?php echo esc_attr($sol_logo) ?>">
                     </i>
@@ -103,18 +103,27 @@ $sol_logo = "data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjUwIiB2a
             <p><?php echo __('Download the application for mobile device', 'fyfy_usdc');?></p>
         </div>
         <div class="content__pair--content">
-            <div class="content__pair--subheader">
-                <a class="app_broswer_link apple" href="https://apps.apple.com/us/genre/ios/id36">
-                    <img width="150" src="<?php echo FYFY_PLUGIN_URL.'/assets/images/apple-app-store.png';?>">
-                </a>
+
+            <div class="over-image coming-soon-button" >
+                <img width="220" src="<?php echo FYFY_PLUGIN_URL.'/assets/images/coming-soon-banner-png.png';?>">
             </div>
 
             <div class="content__pair--subheader">
-                <a class="app_broswer_link google" href="https://play.google.com/store/apps/">
-                    <img width="150" src="<?php echo FYFY_PLUGIN_URL.'/assets/images/google-app-store.png';?>">
+                <a class="app_broswer_link apple">
+                    <img width="190" src="<?php echo FYFY_PLUGIN_URL.'/assets/images/apple-app-store.png';?>">
+                </a>
+            </div>
+            <div class="over-image coming-soon-button" >
+                <img width="220" src="<?php echo FYFY_PLUGIN_URL.'/assets/images/coming-soon-banner-png.png';?>">
+            </div>
+
+            <div class="content__pair--subheader">
+                <a class="app_broswer_link google">
+                    <img width="190" src="<?php echo FYFY_PLUGIN_URL.'/assets/images/google-app-store.png';?>">
                 </a>
             </div>
         </div>
+
     </div>
 </div>
 
