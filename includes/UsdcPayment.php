@@ -121,7 +121,7 @@ final class UsdcPayment
      * Define FyFy Constants.
      */
     private function define_constants() {
-        $this->define( 'FYFY_VERSION', $this->version );
+        //$this->define( 'FYFY_VERSION', $this->version );
         $this->define( 'FYFY_PLUGIN_DIR', plugin_dir_path( FYFY_PLUGIN_FILE ) );
         $this->define( 'FYFY_PLUGIN_URL', plugin_dir_url( FYFY_PLUGIN_FILE ) );
         $this->define( 'FYFY_DOMAIN', 'fyfy_usdc_gateway');

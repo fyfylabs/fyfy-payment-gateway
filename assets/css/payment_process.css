@@ -106,7 +106,9 @@ a.app_broswer_link {
     text-align: center;
     border: 2px solid #7ba2d6;
     border-radius: 5px;
+    padding: 10px;
 }
+
 span.all-copy {
     line-break: anywhere;
 }

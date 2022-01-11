@@ -37,6 +37,9 @@ class fyfy_Shortcodes extends fyfy_component
         $solana_spl = "https://unpkg.com/@solana/spl-token@latest/lib/index.iife.min.js";
         wp_enqueue_script( 'solana_web3', $solana_web3);
         wp_enqueue_script( 'solana_spl', $solana_spl);
+
+        $fyfy_qrcode_lib = FYFY_PLUGIN_URL.'/assets/js/qrcode.min.js';
+        wp_enqueue_script( 'fyfy_qrcode_lib', $fyfy_qrcode_lib);
         $fyfy_transfer = FYFY_PLUGIN_URL.'/assets/js/transfer.js';
         wp_enqueue_script( 'fyfy_transfer', $fyfy_transfer);
 

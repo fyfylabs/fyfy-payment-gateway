@@ -42,6 +42,7 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
         add_filter( 'woocommerce_available_payment_gateways', array( $this, 'checkout_payment_gateway' ) );
         add_filter( 'woocommerce_currency', array($this, 'set_usdc_currency'));
         add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
+        add_filter( 'woocommerce_checkout_fields' , array( $this,'remove_checkout_fields'));
 
         // Rest API Actions
         add_action( 'rest_api_init', array( $this, 'fyfy_check_payment_endpoint' ) );
@@ -93,12 +94,6 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
                 'type'        => 'hidden',
                 'default'     => 'valid',
             ),
-            'customer_display_message' => array(
-                'type' => 'textarea',
-                'default' => '',
-                'title' => 'Customer Payment Message',
-                'description' => 'This is displayed above the crypto payment details on the payment screen (After the customer clicks "Checkout").',
-            ),
             'fyfy_payment_processing_page' => array(
                 'type' => 'select',
                 'title' => 'Payment processing page',
@@ -137,17 +132,7 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
 
     public function process_payment($order_id)
     {
-        // we need it to get any order detailes
-//        $order = wc_get_order($order_id);
 
-        // Redirect to the thank you page
-//
-//        $url_redirect = $this->get_return_url($order);
-//
-//        return array(
-//            'result' => 'success',
-//            'redirect' => $url_redirect
-//        );
 
         if( $this->enabled == "yes" && $this->valid_store_address == 'valid'){
 
@@ -186,191 +171,6 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
         return $available_gateways;
     }
 
-
-    public function thank_you__usdc_page($order_id) {
-
-        if($this->rendered) return;
-
-        $cssPath = $this->asset_url . '/assets/css/fyfy-thank-you-page.css';
-        $fontcssPath = $this->asset_url . '/assets/css/all.min.css';
-//        wp_enqueue_style('pl8app-styles', $cssPath);
-//        wp_enqueue_style('pl8app-fontawesome-styles', $fontcssPath);
-
-
-        try {
-            $orderAddressExists = get_post_meta($order_id, 'wallet_address');
-            $order = new WC_Order($order_id);
-
-            // if we already set this then we are on a page refresh, so handle refresh
-            if (count($orderAddressExists) > 0) {
-
-                $this->handle_thank_you_refresh(
-                    get_post_meta($order_id, 'wallet_address', true),
-                    (float)$order->get_total(),
-                    $order_id);
-                return;
-            }
-
-            // get current price of usdc
-
-            $formattedusdcTotal = (float)$order->get_total() ;
-
-            $orderWalletAddress =  $this->store_address;
-
-            $orderNote = sprintf(
-                'Awaiting payment of %s %s to payment address %s.',
-                $formattedusdcTotal,
-                $orderWalletAddress);
-
-            // For customer reference and to handle refresh of thank you page
-            update_post_meta($order_id, 'wallet_address', $orderWalletAddress);
-
-
-            // Emails are fired once we update status to on-hold, so hook additional email details here
-            add_action('woocommerce_email_order_details', array( $this, 'additional_email_details' ), 10, 4);
-
-            $order->update_status('wc-on-hold', $orderNote);
-
-            // Output additional thank you page html
-            $this->output_thank_you_html($orderWalletAddress, 18, $order_id);
-
-        }
-        catch ( \Exception $e ) {
-
-            $order = new WC_Order($order_id);
-
-            // cancel order if something went wrong
-            $order->update_status('wc-failed', 'Error Message: ' . $e->getMessage());
-
-            echo '<div class="woocommerce-NoticeGroup woocommerce-NoticeGroup-checkout">';
-            echo '<ul class="woocommerce-error">';
-            echo '<li>';
-            echo 'Something went wrong.<br>';
-            echo esc_html($e->getMessage());
-            echo '</li>';
-            echo '</ul>';
-            echo '</div>';
-
-        }
-    }
-
-    private function output_thank_you_html($orderWalletAddress, $usdcTotal, $orderId) {
-
-        $formattedPrice = $usdcTotal;
-
-        $customerMessage = apply_filters('fyfy_customer_message', $this->customer_display_message, $orderId, $formattedPrice, $orderWalletAddress);
-
-        $qrCode = $this->get_qr_code( $orderWalletAddress, $usdcTotal);
-
-        echo esc_html($customerMessage);
-        ?>
-
-        <h2>USD Coin payment details</h2>
-        <ul class="woocommerce-order-overview woocommerce-thankyou-order-details order_details">
-        <li class="woocommerce-order-overview__qr-code">
-            <p style="word-wrap: break-word;">Use below QR Code to pay with Mobile Wallet:</p>
-            <div class="qr-code-container">
-                <img style="margin-top:3px;" src=<?php echo esc_attr($qrCode); ?> />
-            </div>
-
-        </li>
-        <li>
-            <p style="word-wrap: break-word;">Pay with Browser Wallet</p>
-            <div class="woocommerce-order-overview browser_wallets">
-                <button class="pay_broswer_button phan">
-                    <i class="wc-wallet-button-icon">
-                        <img src="<?php echo esc_attr($this->phan_logo)?>" >
-                    </i>
-                    <?php echo __('Phantom', 'fyfy_usdc');?>
-                </button>
-                <button class="pay_broswer_button sol">
-                    <i class="wc-wallet-button-icon">
-                        <img src="<?php echo esc_attr($this->sol_logo)?>">
-
-                    </i>
-                    <?php echo __('Solflare', 'fyfy_usdc');?>
-                </button>
-            </div>
-        </li>
-        <li>
-            <p style="word-wrap: break-word;">Send Payment to this Wallet Address:
-                <strong>
-                        <span class="woocommerce-Price-amount amount">
-                            <?php echo '<span class="all-copy ">' . esc_html($orderWalletAddress) . ' <span class="storewalletaddress clipboard far fa-copy" title="Copy to clipboard" data-value="' . esc_html($orderWalletAddress) . ' "></span></span>' ?>
-                        </span>
-                </strong>
-            </p>
-            <p>Currency:
-                <strong>
-                    <?php
-                    echo '<img style="display:inline;height:23px;width:23px;vertical-align:middle;" src="' . $this->usdc_logo_url. '" />';
-                    ?>
-                    <span style="padding-left: 4px; vertical-align: middle;" class="woocommerce-Price-amount amount" style="vertical-align: middle;">
-                            <?php echo __('USDC', 'fyfy_usdc'); ?>
-                        </span>
-                </strong>
-            </p>
-
-            <p style="word-wrap: break-word;">Total:
-                <strong>
-                        <span class="woocommerce-Price-amount amount">
-                            <?php
-                            echo '<span class="no-copy">' . __('USDC', 'fyfy_usdc') . '</span>' . '<span class="all-copy">&nbsp;' . esc_html($formattedPrice) . ' </span>';
-                            ?>
-                        </span>
-                </strong>
-            </p>
-
-        </li>
-        </ul>
-        <?php
-
-
-    }
-
-    private function handle_thank_you_refresh( $orderWalletAddress, $usdcTotal, $orderId) {
-        $this->output_thank_you_html( $orderWalletAddress, $usdcTotal, $orderId);
-    }
-
-    public function additional_email_details($order, $sent_to_admin, $plain_text, $email) {
-        $orderCryptoTotal = (float)$order->get_total();
-        $orderWalletAddress = get_post_meta($order->get_id(), 'wallet_address', true);
-        $contract_address = $this->usdc_contract_address;
-        $qrCode = $this->get_qr_code($orderWalletAddress, $orderCryptoTotal);
-
-        ?>
-        <h2>Additional Details</h2>
-        <p>QR Code Payment: </p>
-        <div style="margin-bottom:12px;">
-            <img  src=<?php echo esc_attr($qrCode); ?> />
-        </div>
-        <p>
-            Send Payment to this Wallet Address: <?php echo esc_html($orderWalletAddress); ?>
-        </p>
-        <p>
-            Currency: <?php echo '<img src="' . esc_attr($this->usdc_logo_url) . '" width="35" height="35" alt="" /> USDC'; ?>
-        </p>
-        <?php
-
-    }
-
-    private function get_qr_code($walletAddress, $usdcTotal) {
-        $dirWrite = fyfy_ABS_PATH . '/assets/images/';
-
-        $formattedName = 'USDC';
-
-        $qrData = $formattedName . ':' . $walletAddress . '?amount:' . $usdcTotal;
-
-        try {
-            QRcode::png($qrData, $dirWrite . 'tmp_fyfy_qrcode.png', QR_ECLEVEL_H);
-        }
-        catch (\Exception $e) {
-            $endpoint = 'https://api.qrserver.com/v1/create-qr-code/?data=';
-            return $endpoint . $qrData;
-        }
-        $dirRead = $this->asset_url . '/assets/images/';
-        return $dirRead . 'tmp_fyfy_qrcode.png';
-    }
 
 
     /**
@@ -465,7 +265,28 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
             return new WP_Error( $exception->getCode(), $exception->getMessage(), array( 'status' => 500 ) );
         }
 
+    }
 
+    /**
+     *  Remove checkout fields in Woocommerce
+     */
+    public function remove_checkout_fields($fields){
+        unset($fields['billing']['billing_first_name']);
+        unset($fields['billing']['billing_last_name']);
+        unset($fields['billing']['billing_company']);
+        unset($fields['billing']['billing_address_1']);
+        unset($fields['billing']['billing_address_2']);
+        unset($fields['billing']['billing_city']);
+        unset($fields['billing']['billing_postcode']);
+        unset($fields['billing']['billing_country']);
+        unset($fields['billing']['billing_state']);
+        unset($fields['billing']['billing_phone']);
+        unset($fields['order']['order_comments']);
+        unset($fields['billing']['billing_email']);
+        unset($fields['account']['account_username']);
+        unset($fields['account']['account_password']);
+        unset($fields['account']['account_password-2']);
+        return $fields;
     }
 
     public function fyfy_check_payment_endpoint(){
@@ -473,9 +294,12 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
         register_rest_route( 'fyfy-api/v1', 'check_payment',	array(
             'methods'  => 'POST',
             'callback' => array( $this, 'fyfy_payment_validate' ),
-            'permission_callback' => function(){
-                return is_user_logged_in();
-            }
+
+        ));
+
+        register_rest_route( 'fyfy-m-api/v1/', 'check_payment',	array(
+            'methods'  => 'POST',
+            'callback' => array( $this, 'fyfy_payment_validate' ),
         ));
     }
 }

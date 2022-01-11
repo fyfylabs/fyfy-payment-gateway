@@ -54,11 +54,23 @@ class WC_GATEWAY_fyfy_request {
      */
     protected function get_fyfy_args( $order ) {
 
+
+        // Get the QR code image
+        $usdcTotal = (float)$order->get_total();
+
+        $order_id = $order->get_id();
+
+        $formattedName = 'USDC';
+
+        $callback_url = esc_url_raw(rest_url()) . 'fyfy-m-api/v1/check_payment?order_id='. $order_id;
+
+        $qrData = $formattedName . ':' . $this->gateway->store_address . '?amount:' . $usdcTotal. '?callbackurl:'. $callback_url;
+
+
         $fyfy_args = apply_filters(
             'woocommerce_fyfy_args',
             array(
                 'store_address' => $this->gateway->store_address,
-                'customer_display_message' => $this->gateway->customer_display_message,
                 'usdc_logo_url' => $this->gateway->usdc_logo_url,
                 'usdc_contract_address' => $this->gateway->usdc_contract_address,
                 'cmd'           => 'fyfy_cart',
@@ -67,6 +79,7 @@ class WC_GATEWAY_fyfy_request {
                 'return'        => esc_url_raw( $this->gateway->get_return_url( $order )),
                 'cancel_return' => esc_url_raw( $order->get_cancel_order_url_raw() ),
                 'image_url'     => esc_url_raw( $this->gateway->icon ),
+                'qr_data'       => $qrData,
                 'custom'        => wp_json_encode(
                     array(
                         'order_key' => $order->get_order_key(),

@@ -3,14 +3,6 @@
 // Get the modal
 var modal = document.getElementById("fyfymodal");
 
-// Get the button that opens the modal
-var btn = document.getElementById("fyfyBtn");
-
-
-// When the user clicks the button, open the modal
-btn.onclick = function() {
-    modal.style.display = "block";
-};
 
 // When the user clicks anywhere outside of the modal, close it
 window.onclick = function(event) {
@@ -18,6 +10,7 @@ window.onclick = function(event) {
         modal.style.display = "none";
     }
 };
+
 
 
 jQuery(function ($) {
@@ -190,6 +183,8 @@ jQuery(function ($) {
         transferSOL(provider);
     });
 
+
+    new QRCode(document.getElementById("qrcode"), qr_data);
 });
 
 

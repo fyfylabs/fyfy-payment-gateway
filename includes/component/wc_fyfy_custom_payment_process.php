@@ -32,7 +32,7 @@ $sol_logo = "data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjUwIiB2a
                 <?php echo __('Scan this code to pay', 'fyfy_usdc');?>
             </h4>
             <div class="fyfy_qr">
-                <img src="<?php echo FYFY_PLUGIN_URL.'/assets/images/tmp_fyfy_qrcode.png';?>">
+                <div id="qrcode" alt="QR code is disabled!">
             </div>
         </div>
     </div>
@@ -59,7 +59,6 @@ $sol_logo = "data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjUwIiB2a
                 </button>
             </div>
         </div>
-
     </div>
     <div class="content__pair">
         <div class="content__pair--header">
@@ -139,4 +138,5 @@ $sol_logo = "data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjUwIiB2a
     var contractaddress = "<?php echo !empty($usdc_contract_address)? $usdc_contract_address:''; ?>";
     var amount = <?php echo !empty($order_total_price)? $order_total_price:0; ?>;
     var order_id = <?php echo !empty($order_id)? $order_id:0; ?>;
+    var qr_data = "<?php echo !empty($qr_data)? $qr_data:''; ?>";
 </script>
