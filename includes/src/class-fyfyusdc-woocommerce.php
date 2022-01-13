@@ -199,6 +199,7 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
 
         try{
 
+
             $signature = $request->get_param('signature');
             $order_id = $request->get_param('order_id');
 
@@ -262,7 +263,7 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
 
         }
         catch (Exception $exception){
-            return new WP_Error( $exception->getCode(), $exception->getMessage(), array( 'status' => 500 ) );
+            return new WP_Error( 'transaction_Check_Error', $exception->getMessage(), array( 'status' => 500 ) );
         }
 
     }
@@ -294,12 +295,17 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
         register_rest_route( 'fyfy-api/v1', 'check_payment',	array(
             'methods'  => 'POST',
             'callback' => array( $this, 'fyfy_payment_validate' ),
-
+            'permission_callback' => function(){
+                return true;
+            }
         ));
 
         register_rest_route( 'fyfy-m-api/v1/', 'check_payment',	array(
             'methods'  => 'POST',
             'callback' => array( $this, 'fyfy_payment_validate' ),
+            'permission_callback' => function(){
+                return true;
+            }
         ));
     }
 }

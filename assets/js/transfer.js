@@ -135,6 +135,7 @@ jQuery(function ($) {
                 let signature = await connection.sendRawTransaction(signed.serialize());
                 // Confirm whether the transaction went through or not
                 await connection.confirmTransaction(signature);
+                console.log(signature);
 
 
                 $.ajax({
