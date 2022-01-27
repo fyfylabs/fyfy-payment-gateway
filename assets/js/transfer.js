@@ -56,7 +56,52 @@ jQuery(function ($) {
     };
 
 
+    /**
+     * Call the ajax to check the order status by Mobile every 2 seconds.
+     */
 
+    var check_order_status = {
+
+        start: function() {
+            this.interval = setInterval(check_status_by_ajax, 2000);
+        },
+
+        stop:function(){
+            clearInterval(this.interval);
+        }
+
+    };
+
+    const check_status_by_ajax = () => {
+        $.ajax( {
+            url: wpFyFYApi.ajax_url,
+            type: 'post',
+            data: {
+                action: 'check_order_status_by_m',
+                nonce: wpFyFYApi.ajax_nonce,   // pass the nonce here
+                order_id: order_id,
+            },
+            success( result ) {
+
+                if ( result.data.message === 'verified' ) {
+
+                    check_order_status.stop();
+
+                    $('#fyfymodal').css('display', 'block');
+                    $('#fyfyBtn').removeClass('loading');
+
+                }
+            },
+        });
+    };
+
+    check_order_status.start();
+
+    /**
+     *
+     * @param provider
+     * @returns {Promise<void>}
+     */
     async function transferSOL(provider) {
 
         if(!$('#fyfyBtn').hasClass('loading')) $('#fyfyBtn').addClass('loading');
@@ -147,14 +192,17 @@ jQuery(function ($) {
                     data: {
                         signature: signature,
                         order_id: order_id,
+                        type: 'web'
                     },
                     success: function( data ) {
                         $('#fyfymodal').css('display', 'block');
                         $('#fyfyBtn').removeClass('loading');
+                        check_order_status.stop();
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         console.log(errorThrown);
                         $('#fyfyBtn').removeClass('loading');
+                        check_order_status.stop();
                     }
                 });
 
@@ -186,6 +234,10 @@ jQuery(function ($) {
 
 
     new QRCode(document.getElementById("qrcode"), qr_data);
+
+
+
+
 });
 
 

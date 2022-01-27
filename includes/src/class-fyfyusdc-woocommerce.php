@@ -43,6 +43,9 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
         add_filter( 'woocommerce_currency', array($this, 'set_usdc_currency'));
         add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
         add_filter( 'woocommerce_checkout_fields' , array( $this,'remove_checkout_fields'));
+        add_action( 'wp_ajax_nopriv_check_order_status_by_m', 'check_order_status_by_m' );
+        add_action( 'wp_ajax_check_order_status_by_m', 'check_order_status_by_m' );
+
 
         // Rest API Actions
         add_action( 'rest_api_init', array( $this, 'fyfy_check_payment_endpoint' ) );
@@ -202,6 +205,14 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
 
             $signature = $request->get_param('signature');
             $order_id = $request->get_param('order_id');
+            $request_type_source = $request->get_param('web');
+
+            if(!empty($request_type_source) && $request_type_source == 'web'){
+                $payment_type = 'Paid by browser extension';
+            }
+            else{
+                $payment_type = 'Paid by Mobile wallet';
+            }
 
             if(empty($signature) || empty($order_id)) {
                 throw new Exception('Missing Parameters!');
@@ -243,11 +254,11 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
 
                 if($db_result){
                     $orderNote = sprintf(
-                        'Order payment of %s %s verified at %s. Transaction Hash: %s',
+                        'Order payment of %s %s verified at %s. Transaction Hash: %s , Payment Type: %s',
                         'USDC',
                         $formattedCryptoTotal,
                         date('Y-m-d H:i:s', time()),
-                        apply_filters('fyfy_order_txhash', $signature));
+                        apply_filters('fyfy_order_txhash', $signature), apply_filters('fyfy_order_type', $payment_type));
 
                     $order->payment_complete();
                     $order->add_order_note($orderNote);
@@ -264,6 +275,50 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
         }
         catch (Exception $exception){
             return new WP_Error( 'transaction_Check_Error', $exception->getMessage(), array( 'status' => 500 ) );
+        }
+
+    }
+
+    /**
+     * Check order status
+     */
+    public function check_order_status_by_m(){
+
+        $json = array();
+
+        try{
+            // Check for nonce security
+            if ( ! wp_verify_nonce( $_POST['nonce'], 'ajax-nonce' ) ) {
+                die ( 'Unauthorized!');
+            }
+
+            if (!empty($_POST['order_id'])) {
+
+                $order_id = $_POST['order_id'];
+                $order = new WC_Order($order_id);
+
+
+                if(empty($order)){
+                    throw new Exception('Order ('. $order_id. ') is not existed in database!');
+                }
+
+                $json['message'] = 'not verified';
+
+                if ( $order->has_status('completed') ) {
+                    $json['message'] = 'verified';
+                }
+
+                wp_send_json_success( $json );
+
+            }
+            else{
+                throw new Exception('Order Id is missing!');
+            }
+        }
+        catch (Exception $exception){
+
+            $json['message'] = $exception->getMessage();
+            wp_send_json_error( $json );
         }
 
     }
@@ -308,4 +363,7 @@ class WC_fyfy_usdc_gateway_Gateway extends WC_Payment_Gateway {
             }
         ));
     }
+
+
+
 }

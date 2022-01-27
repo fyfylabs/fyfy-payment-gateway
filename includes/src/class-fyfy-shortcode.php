@@ -45,6 +45,8 @@ class fyfy_Shortcodes extends fyfy_component
 
         wp_localize_script('fyfy_transfer', 'wpFyFYApi', array(
             'root' => esc_url_raw(rest_url()),
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'ajax_nonce' => wp_create_nonce('ajax-nonce'),
             'nonce' => wp_create_nonce('wp_rest')
         ));
 
