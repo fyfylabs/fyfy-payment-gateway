@@ -207,7 +207,7 @@ final class UsdcPayment
 
     public function fyfy_plugin_row_meta( $input, $file){
 
-        if ( $file != 'fyfycoin-gateway/fyfycoin.php' && $file != 'payment-gateway-nav/fyfycoin.php')
+        if ( $file != 'fyfy-payment-gateway/fyfycoin.php')
             return $input;
 
         $setting_link = admin_url( 'admin.php?page=wc-settings&tab=checkout&section='. FYFY_DOMAIN );
