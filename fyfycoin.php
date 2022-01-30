@@ -29,8 +29,6 @@ if ( ! defined( 'FYFY_PLUGIN_FILE' ) ) {
 
 // Include the main UsdcPayment class.
 if ( ! class_exists( 'UsdcPayment', false ) ) {
-
-
     include_once dirname( __FILE__ ) . '/includes/UsdcPayment.php';
 }
 
